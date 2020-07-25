@@ -1,0 +1,16 @@
+----------------------------------------------------------------
+Fri Jul 24 14:45:30 GFT 2020:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0173-81ee-14b8-0000102942b8 
+on database directory memory:D:\projetos\cursos\codenation\central\demo\bee2270f-ed3e-4ca6-8553-3298dd621e6f with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@30946e09 
+Loaded from file:/C:/Users/Nash%20Junior/.m2/repository/org/apache/derby/derby/10.14.2.0/derby-10.14.2.0.jar
+java.vendor=AdoptOpenJDK
+java.runtime.version=11.0.7+10
+user.dir=D:\projetos\cursos\codenation\central\demo
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Fri Jul 24 14:45:35 GFT 2020:
+Shutting down instance a816c00e-0173-81ee-14b8-0000102942b8 on database directory memory:D:\projetos\cursos\codenation\central\demo\bee2270f-ed3e-4ca6-8553-3298dd621e6f with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@30946e09 
