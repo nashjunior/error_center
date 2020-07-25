@@ -120,4 +120,9 @@ public class LogInterfaceImpl implements LogInterface {
     return false;
   }
 
+  @Override
+  public List<Log> findAllList() {
+    return logRepo.findAll();
+  }
+
 }
