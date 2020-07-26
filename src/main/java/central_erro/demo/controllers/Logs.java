@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import central_erro.demo.dto.request.LogsDTORequest;
+import central_erro.demo.dto.response.LogDTOResponse;
 import central_erro.demo.entities.Log;
 import central_erro.demo.services.interfaces.LogInterface;
 
@@ -39,12 +40,14 @@ public class Logs {
   LogInterface logInterface;
 
   @GetMapping
-  public ResponseEntity<List<?>> getAllLogs(@RequestParam Map<String, String> reqParam) {
+  public ResponseEntity<List<LogDTOResponse>> getAllLogs(@RequestParam Map<String, String> reqParam) {
     List<?> logs;
+    List <LogDTOResponse> responses;
     int expectedValue = reqParam.size();
     if(expectedValue==0) {
-      logs = logInterface.findAllLogsByParam(null, null, false, false, false);
-      return ResponseEntity.ok(logs);
+      responses = logInterface.findAllLogsByParam(null, null, false, false, false).stream()
+      .map(log -> new LogDTOResponse(log)).collect(Collectors.toList());
+      return ResponseEntity.ok(responses);
     }
     Map <String, String> ordersString =new HashMap<>();
     reqParam.entrySet().removeIf(param -> param.getValue()==null);
@@ -68,7 +71,7 @@ public class Logs {
     Boolean isFilterOrderSizePage = isOrderSizePage && expectedValue > 3 ? true : false;
     Boolean isFilter2Params = (isOrderSize || isOrderPage || isSizePage) && expectedValue > 2 ? true : false;
     Boolean isFilter1Param = (isOrdered || isSized || isPageable) && (!isOrderSize && !isOrderPage && !isSizePage) && expectedValue > 1 ? true : false;
-    Boolean isFilter = (isFilterOrderSizePage || isFilter2Params || isFilter1Param)  &&!isFilter1Param && !isFilter2Params && expectedValue>0 ? true : false;
+    Boolean isFilter = (isFilterOrderSizePage || isFilter2Params || isFilter1Param)  &&(!isFilter1Param || !isFilter2Params) && expectedValue>0 ? true : false;
     if (isFilter) {
       reqParam = removeOtherFilter(reqParam, isOrdered, isPageable, isSized, isSizePage, isOrderSize, isOrderPage, isPageable);
       if (reqParam.size() != expectedValue) return erro(); 
@@ -87,18 +90,21 @@ public class Logs {
     if(isOrdered) logs = logInterface.findAllLogsByParam(reqParam, ordersString, isFilter,isSized, isPageable);
     else logs = logInterface.findAllLogsByParam(reqParam, ordersString,isFilter ,isSized, isPageable);
     if(logs ==null) return erro();
+    
+     responses = logs.stream().map(log -> new LogDTOResponse(log)).collect(Collectors.toList());
 
-    return ResponseEntity.ok(logs);
+    return ResponseEntity.ok(responses);
     
   }
 
   @PostMapping
   @ResponseBody
-  public ResponseEntity<Log> createLog(@Valid @RequestBody final LogsDTORequest incomingLog) {
+  public ResponseEntity<LogDTOResponse> createLog(@Valid @RequestBody final LogsDTORequest incomingLog) {
     ModelMapper modelMapper = new ModelMapper();
     Log newLog = modelMapper.map(incomingLog, Log.class);
     logInterface.save(newLog);
-    return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON).body(newLog);
+    LogDTOResponse logDTOResponse = new LogDTOResponse(newLog);
+    return ResponseEntity.status(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON).body(logDTOResponse);
   }
 
   @DeleteMapping("/{id}")
@@ -106,7 +112,7 @@ public class Logs {
     return logInterface.deleteById(id) ? ResponseEntity.ok().build() : ResponseEntity.badRequest().build();
   }
 
-  public ResponseEntity<List<?>> erro() {
+  public ResponseEntity<List<LogDTOResponse>> erro() {
     return ResponseEntity.badRequest().build();
   }
 

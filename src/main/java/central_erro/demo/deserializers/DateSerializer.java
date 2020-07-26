@@ -1,4 +1,4 @@
-package central_erro.demo.dto;
+package central_erro.demo.deserializers;
 
 import java.io.IOException;
 import java.time.LocalDateTime;

@@ -14,8 +14,8 @@ import javax.validation.constraints.NotNull;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import central_erro.demo.dto.DateDesserializer;
-import central_erro.demo.dto.DateSerializer;
+import central_erro.demo.deserializers.DateDesserializer;
+import central_erro.demo.deserializers.DateSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
