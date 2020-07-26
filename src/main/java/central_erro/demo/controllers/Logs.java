@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
@@ -94,11 +95,15 @@ public class Logs {
      responses = logs.stream().map(log -> new LogDTOResponse(log)).collect(Collectors.toList());
 
     return ResponseEntity.ok(responses);
-    
+  }
+
+  @GetMapping("/{id}")
+  public ResponseEntity<LogDTOResponse> show(@PathVariable("id")Long id) {
+    Optional<Log> log = logInterface.findById(id);
+    return log.isPresent() ?ResponseEntity.ok(new LogDTOResponse(log.get())) :  ResponseEntity.notFound().build();
   }
 
   @PostMapping
-  @ResponseBody
   public ResponseEntity<LogDTOResponse> createLog(@Valid @RequestBody final LogsDTORequest incomingLog) {
     ModelMapper modelMapper = new ModelMapper();
     Log newLog = modelMapper.map(incomingLog, Log.class);
