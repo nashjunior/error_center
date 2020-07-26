@@ -37,7 +37,7 @@ public class LogInterfaceImpl implements LogInterface {
     return logRepo.findAll();
   }
 
-  public List<?> findAllLogsByParam(Map<String, String> params, Map <String, String> ordersString , Boolean isFilter,Boolean isSized, Boolean isOrderSizePage) {
+  public List<?> findAllLogsByParam(Map<String, String> params, Map <String, String> ordersString , Boolean isFilter,Boolean isSized, Boolean isPageable) {
     String sqlSearch = "SELECT l.* FROM Log l WHERE ";
     List<?> list = new ArrayList<>();
     if (isFilter) {
@@ -58,7 +58,7 @@ public class LogInterfaceImpl implements LogInterface {
     }
     else sqlSearch = sqlSearch.substring(0, sqlSearch.length() - 7);
 
-    if (ordersString!=null || isSized || isOrderSizePage) {
+    if (ordersString!=null) {
       for (Map.Entry<String, String> param : params.entrySet()) {
         if(param.getKey().equals("order")) {
           sqlSearch = sqlSearch.concat(" ORDER BY ");
@@ -68,17 +68,13 @@ public class LogInterfaceImpl implements LogInterface {
           }
           sqlSearch = sqlSearch.substring(0, sqlSearch.length() - 1);
         }
-        else if(param.getKey().equals("size")){
-          sqlSearch = sqlSearch.concat(" LIMIT "+param.getValue());
-        }
-        else if (param.getKey().equals("page")) {
-          sqlSearch = sqlSearch.concat(" OFFSET "+param.getValue());
-        }
-      } 
+      }  
     }
-   
     System.out.println(sqlSearch);
     Query query = em.createNativeQuery(sqlSearch, Log.class);
+    if(isSized) query.setMaxResults(Integer.parseInt(params.get("size")));
+    if(isPageable) query.setFirstResult(Integer.parseInt(params.get("page")));
+    
     try {
       list = query.getResultList();
     } catch (RuntimeException e) {
