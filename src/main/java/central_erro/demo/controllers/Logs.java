@@ -2,13 +2,15 @@ package central_erro.demo.controllers;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,17 +38,13 @@ public class Logs {
   @Autowired
   LogInterface logInterface;
 
-  @Autowired
-  ObjectMapper objectMapper;
-
-
   @GetMapping
-  public ResponseEntity<List<?>> getAllLogs(@RequestParam Map<String, Object> reqParam) {
+  public ResponseEntity<List<?>> getAllLogs(@RequestParam Map<String, String> reqParam) {
     int expectedValue = reqParam.size();
     reqParam.entrySet().removeIf(param -> param.getValue().toString().trim().isEmpty());
 
-
     Boolean isOrdered = containsOrder(reqParam);
+    if(isOrdered && !isArray(reqParam.get("order").toString())) return erro();
     Boolean isPageable = containsPage(reqParam);
     Boolean isSized = containsSize(reqParam);
 
@@ -61,26 +59,32 @@ public class Logs {
                                   )
                                 ) 
                               );
+    List<String> orderTypes = new ArrayList<>(Arrays.asList(reqParam.get("order").toString().split("(?![^)(]*\\([^)(]*?\\)\\)),(?![^\\[]*\\])")));
+    Map <String, String> ordersString = new HashMap<>(orderTypes.stream().map(orderType -> orderType.replaceAll("\\[|\\]", "")).map(orderType -> {
+      if(orderType.contains(",")) return orderType.split(",");
+      else return new String[]{orderType, ""};
+    }).collect(Collectors.toMap(e -> e[0], e -> e[1])));
 
+    ordersString.entrySet().forEach(param -> System.out.println(param.getKey()+" "+param.getValue()));
+    
     if (isFilter) {
       reqParam = removeOtherFilter(reqParam, isOrdered, isPageable, isSized, isSizePage, isOrderSize, isOrderPage, isOrderSizePage);
       if (reqParam.size() != expectedValue) return erro();
-      if (isPageable || isOrderPage) 
+      if (isPageable && (!isSized && !isOrderSizePage))
       {
+        System.out.println("aqui");
         reqParam.put("size", "10");
         isSized = containsSize(reqParam);
         isOrderSize = containsOrderSize(isOrdered, isSized);
         isSizePage = containsSizePage(isSized, isPageable);
         isOrderSizePage = isOrderSize && isSizePage ? true : false;
       }
-       
       reqParam = orderMap(reqParam, isOrdered, isSized, isOrderSizePage);
-      reqParam.forEach((key,value) -> System.out.println(key+" : " + value.toString()));
-      System.out.println("--------------------");
-
-      
-      
-      
+      /* List<?> logs;
+      if(isOrdered) logs = logInterface.findAllLogsByParam(reqParam, ordersString, isSized, isPageable);
+      else logs = logInterface.findAllLogsByParam(reqParam, null, isSized, isPageable);
+      if(logs ==null) return erro();
+      return ResponseEntity.ok(logs); */
     }
     return ResponseEntity.ok().build();
     
@@ -104,15 +108,15 @@ public class Logs {
     return ResponseEntity.badRequest().build();
   }
 
-  private Boolean containsOrder(Map <String,Object> reqParam) {
+  private Boolean containsOrder(Map <String,String> reqParam) {
     return reqParam.containsKey("order");
   }
 
-  private Boolean containsSize(Map <String,Object> reqParam) {
+  private Boolean containsSize(Map <String,String> reqParam) {
     return reqParam.containsKey("size");
   }
 
-  private Boolean containsPage(Map <String,Object> reqParam) {
+  private Boolean containsPage(Map <String,String> reqParam) {
     return reqParam.containsKey("page");
   }
 
@@ -128,7 +132,7 @@ public class Logs {
     return isSized && isPageable ? true : false;
   }
 
-  private Map <String, Object> removeOtherFilter(Map <String,Object> reqParam, Boolean isOrdered,
+  private Map <String, String> removeOtherFilter(Map <String,String> reqParam, Boolean isOrdered,
   Boolean isPageable, Boolean isSized, Boolean isSizePage, Boolean isOrderSize, Boolean isOrderPage,Boolean isOrderSizePage){
     reqParam.entrySet().removeIf(param -> {
       Boolean contains = true;
@@ -147,8 +151,8 @@ public class Logs {
     return reqParam;
   }
 
-  private Map <String, Object> orderMap(Map <String,Object> reqParam, Boolean isOrdered, Boolean isSized, Boolean isOrderSizePage) {
-    List<Map.Entry<String, Object>> list2= new ArrayList<>(reqParam.entrySet());
+  private Map <String, String> orderMap(Map <String,String> reqParam, Boolean isOrdered, Boolean isSized, Boolean isOrderSizePage) {
+    List<Map.Entry<String, String>> list2= new ArrayList<>(reqParam.entrySet());
     
     //Comparando as chaves e colocando o size como ultima chave
     Collections.sort(list2, (obj1, obj2) -> {
@@ -168,5 +172,15 @@ public class Logs {
     reqParam.clear();
     list2.forEach(obj -> reqParam.put(obj.getKey(), obj.getValue()));
     return reqParam;
+  }
+
+  private Boolean isArray(String values) {
+    Stack<Character> stack  = new Stack<Character>();
+    for(int i = 0; i < values.length(); i++) {
+      char c = values.charAt(i);
+      if(c == '[') stack.push(c);
+      if(c == ']' && (stack.isEmpty() || stack.pop() != '[')) return false;
+    }
+    return stack.isEmpty();
   }
 }

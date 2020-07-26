@@ -3,13 +3,9 @@ package central_erro.demo.services.implementations;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -36,6 +32,44 @@ public class LogInterfaceImpl implements LogInterface {
 
   @Autowired
   private LogRepo logRepo;
+
+  public List<?> findAllLogsByParam(Map<String, String> params, Map <String, String> ordersString , Boolean isSized, Boolean isOrderSizePage) {
+    String sqlSearch = "SELECT l.* from Log l where ";
+    List<?> list = new ArrayList<>();
+    for (Map.Entry<String, String> param : params.entrySet()) {
+      //verifica se parametro e tipo date
+      if (param.getKey().equals("date") && isValidDate(param.getValue().toString())) {
+        sqlSearch = sqlSearch
+            .concat("date(" + param.getKey() + ")=to_date('" + param.getValue().toString() + "','DD/MM/YYYY') AND ");
+        params.remove(param.getValue());
+      }
+      //verifica se o parametro não e de paginacao 
+      else if (!param.getKey().equals("page") && !param.getKey().equals("size") && !param.getKey().equals("order")) {
+        sqlSearch = sqlSearch.concat(param.getKey() + "='" + param.getValue().toString() + "' AND ");
+        params.remove(param.getValue());
+      }
+      else {
+        sqlSearch = sqlSearch.substring(0, sqlSearch.length() - 4);
+      }
+    }
+    if (ordersString != null || isSized || isOrderSizePage) {
+      for (Map.Entry<String, String> param : params.entrySet()) {
+        if(param.getKey().equals("order")) {
+          sqlSearch = sqlSearch.concat(" ORDER BY");
+        }
+      }
+    }
+
+    System.out.println(sqlSearch);
+    Query query = em.createNativeQuery(sqlSearch, Log.class);
+    try {
+      list = query.getResultList();
+    } catch (RuntimeException e) {
+      System.out.println(e.getMessage());
+    }
+
+    return null;
+  }
 
   @Override
   public Page<Log> findAll(Pageable page) {
