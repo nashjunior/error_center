@@ -48,14 +48,23 @@ public class LogInterfaceImpl implements LogInterface {
         sqlSearch = sqlSearch.concat(param.getKey() + "='" + param.getValue().toString() + "' AND ");
         params.remove(param.getValue());
       }
-      else {
-        sqlSearch = sqlSearch.substring(0, sqlSearch.length() - 4);
-      }
     }
+    sqlSearch = sqlSearch.substring(0, sqlSearch.length() - 4);
     if (ordersString != null || isSized || isOrderSizePage) {
       for (Map.Entry<String, String> param : params.entrySet()) {
         if(param.getKey().equals("order")) {
-          sqlSearch = sqlSearch.concat(" ORDER BY");
+          sqlSearch = sqlSearch.concat(" ORDER BY ");
+          for (Map.Entry<String, String> order : ordersString.entrySet()) {
+            sqlSearch = order.getValue().trim().isEmpty() ? sqlSearch.concat(order.getKey()) : sqlSearch.concat(order.getKey()+""+order.getValue().toUpperCase());
+            sqlSearch = sqlSearch.concat(",");
+          }
+          sqlSearch = sqlSearch.substring(0, sqlSearch.length() - 1);
+        }
+        else if(param.getKey().equals("size")){
+          sqlSearch = sqlSearch.concat(" LIMIT "+param.getValue());
+        }
+        else if (param.getKey().equals("page")) {
+          sqlSearch = sqlSearch.concat(" OFFSET "+param.getValue());
         }
       }
     }
@@ -68,7 +77,7 @@ public class LogInterfaceImpl implements LogInterface {
       System.out.println(e.getMessage());
     }
 
-    return null;
+    return list;
   }
 
   @Override

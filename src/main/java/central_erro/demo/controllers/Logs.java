@@ -41,10 +41,18 @@ public class Logs {
   @GetMapping
   public ResponseEntity<List<?>> getAllLogs(@RequestParam Map<String, String> reqParam) {
     int expectedValue = reqParam.size();
+    Map <String, String> ordersString =new HashMap<>();
     reqParam.entrySet().removeIf(param -> param.getValue().toString().trim().isEmpty());
 
     Boolean isOrdered = containsOrder(reqParam);
-    if(isOrdered && !isArray(reqParam.get("order").toString())) return erro();
+    if(isOrdered){
+      if(!isArray(reqParam.get("order").toString())) return erro();
+      List<String> orderTypes = new ArrayList<>(Arrays.asList(reqParam.get("order").toString().split("(?![^)(]*\\([^)(]*?\\)\\)),(?![^\\[]*\\])")));
+      ordersString = new HashMap<>(orderTypes.stream().map(orderType -> orderType.replaceAll("\\[|\\]", "")).map(orderType -> {
+        if(orderType.contains(",")) return orderType.split(",");
+        else return new String[]{orderType, ""};
+      }).collect(Collectors.toMap(e -> e[0], e -> e[1])));
+    } 
     Boolean isPageable = containsPage(reqParam);
     Boolean isSized = containsSize(reqParam);
 
@@ -55,18 +63,11 @@ public class Logs {
     Boolean isFilter = (isOrderSizePage && expectedValue>3) ? true : 
                               (isOrderSize && expectedValue > 2 ? true : 
                                 (isSizePage && expectedValue >2 ? true : 
-                                  ((isOrdered || isSized || isPageable) && expectedValue>1 ? true : false
+                                  ((isOrdered || isSized || isPageable) && expectedValue>1 ? true : 
+                                    (expectedValue >0 ? true : false)
                                   )
                                 ) 
                               );
-    List<String> orderTypes = new ArrayList<>(Arrays.asList(reqParam.get("order").toString().split("(?![^)(]*\\([^)(]*?\\)\\)),(?![^\\[]*\\])")));
-    Map <String, String> ordersString = new HashMap<>(orderTypes.stream().map(orderType -> orderType.replaceAll("\\[|\\]", "")).map(orderType -> {
-      if(orderType.contains(",")) return orderType.split(",");
-      else return new String[]{orderType, ""};
-    }).collect(Collectors.toMap(e -> e[0], e -> e[1])));
-
-    ordersString.entrySet().forEach(param -> System.out.println(param.getKey()+" "+param.getValue()));
-    
     if (isFilter) {
       reqParam = removeOtherFilter(reqParam, isOrdered, isPageable, isSized, isSizePage, isOrderSize, isOrderPage, isOrderSizePage);
       if (reqParam.size() != expectedValue) return erro();
@@ -80,11 +81,11 @@ public class Logs {
         isOrderSizePage = isOrderSize && isSizePage ? true : false;
       }
       reqParam = orderMap(reqParam, isOrdered, isSized, isOrderSizePage);
-      /* List<?> logs;
+      List<?> logs;
       if(isOrdered) logs = logInterface.findAllLogsByParam(reqParam, ordersString, isSized, isPageable);
       else logs = logInterface.findAllLogsByParam(reqParam, null, isSized, isPageable);
       if(logs ==null) return erro();
-      return ResponseEntity.ok(logs); */
+      return ResponseEntity.ok(logs);
     }
     return ResponseEntity.ok().build();
     
