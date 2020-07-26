@@ -69,7 +69,6 @@ public class Logs {
     Boolean isFilter2Params = (isOrderSize || isOrderPage || isSizePage) && expectedValue > 2 ? true : false;
     Boolean isFilter1Param = (isOrdered || isSized || isPageable) && (!isOrderSize && !isOrderPage && !isSizePage) && expectedValue > 1 ? true : false;
     Boolean isFilter = (isFilterOrderSizePage || isFilter2Params || isFilter1Param)  &&!isFilter1Param && !isFilter2Params && expectedValue>0 ? true : false;
-    System.out.println(isFilter);
     if (isFilter) {
       reqParam = removeOtherFilter(reqParam, isOrdered, isPageable, isSized, isSizePage, isOrderSize, isOrderPage, isPageable);
       if (reqParam.size() != expectedValue) return erro(); 

@@ -12,8 +12,10 @@ import javax.persistence.Id;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import central_erro.demo.dto.DateDesserializer;
+import central_erro.demo.dto.DateSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,6 +44,7 @@ public class Log {
 
   @NotNull
   @JsonDeserialize(using = DateDesserializer.class)
+  @JsonSerialize(using = DateSerializer.class)
   @Column(nullable = false)
   private LocalDateTime date;
 
