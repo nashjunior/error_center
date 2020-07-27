@@ -88,6 +88,7 @@ public class LogInterfaceImpl implements LogInterface {
 
   @Override
   public Log save(final Log log) {
+    log.setQuantity(logRepo.countByLevel(log.getLevel())+1);
     return logRepo.save(log);
   }
 
